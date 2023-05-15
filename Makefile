@@ -1,19 +1,18 @@
+# Xiaojing Han
 # Makefile for t9/trieNode program
 # CSE 374 HW 5
 
-# This target is the final executable that will be created.
-# It depends on the object files tnine.o and trie.o.
-tnine: tnine.o trie.o
-	gcc -Wall -g -std=c11 -o t9 tnine.o trie.o
+#build the executable file named "t9."
+all: t9
 
-# This target is responsible for compiling trie.c into the object file trie.o.
-# It depends on trie.c and trienode.h.
-trie.o: trie.c trienode.h
-	gcc -Wall -g -std=c11 -c trie.c
+t9: main.o trie.o
+	gcc -Wall -std=c11 -o t9 main.o trie.o
 
-tnine.o: tnine.c trienode.h
-	gcc -Wall -g -std=c11 -c tnine.c
+main.o: main.c trie.h
+	gcc -Wall -std=c11 -c main.c
 
-# This target removes all object files and any temporary files.
+trie.o: trie.c trie.h
+	gcc -Wall -std=c11 -c trie.c
+
 clean:
-	rm -f *.o t9 *~
+	rm -f *.o output *~ 

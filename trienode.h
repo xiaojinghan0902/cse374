@@ -2,7 +2,6 @@
    a trie implementation 
    CSE374, HW5, 22Wi 
 */
-
 #ifndef TRIENODE_H
 #define TRIENODE_H
 
@@ -11,18 +10,19 @@
 #define MAXLEN 50
 #define BRANCHES 9
 
-// trieNode is one node in an 9-tree, where branches correspond to
-// # and the T9 alphabet.
 typedef struct trieNode {
-  struct trieNode *branches[BRANCHES];
-  char *word;
+  struct trieNode *branches[BRANCHES]; // Array of child nodes for each digit (0-8)
+  char *word; // Pointer to the word stored at the trie node
 } trieNode;
 
-Node_t * CreateTrieNode();
-int getDigit(char letter);
-void BuildTrie(Node_t * root, char * s);
-Node_t * FindNode(Node_t * root, char * number);
-void malfree(Node_t * root);
+trieNode* makeNode(); // Function to create a new trie node
 
+void insert(char* word, trieNode* root); // Function to insert a word into the trie
+
+int charToInt(char ch); // Function to convert a character digit to an integer
+
+trieNode* search(trieNode* trie, char* input); // Function to search for a word in the trie based on a given input sequence
+
+void freetree(trieNode *root); // Function to free the memory occupied by the trie
 
 #endif
