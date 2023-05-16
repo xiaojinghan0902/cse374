@@ -11,106 +11,88 @@
 
 #define CHILDREN 10
 
-// Structure for Trie node
-typedef struct TrieNode {
-    char* word;  // The word associated with the Trie node
-    struct TrieNode* children[CHILDREN];  // Pointers to child nodes
-} Trie;
-
-// Function to create a new Trie node
-Trie* createNode(char* word) {
-    Trie* n = (Trie*)malloc(sizeof(Trie));
-    n->word = word;
-    for (int i = 0; i < CHILDREN; i++) {
-        n->children[i] = NULL;
+TrieNode *make_node(int number, char *word) {
+  TrieNode *node = (TrieNode *) malloc(sizeof(TrieNode));
+  check_malloc(node);
+  char *word_cpy = (char *) malloc(sizeof(char) * (strlen(word) + 1));
+  check_malloc(word_cpy);
+  strncpy(word_cpy, word, strlen(word) + 1);
+  if (node) {
+    node->number = number;
+    node->word = word_cpy;
+    for (int i = 0; i < 11; i++) {
+      node->children[i] = NULL;
     }
-    return n;
+  }
+  return node;
 }
 
-// Function to insert a word into the Trie
-void insert(Trie* root, char* word) {
-    int digit;
-    int i = 0;
-    Trie* current = root;
-
-    // Traverse through each character in the word
-    while (i < strlen(word) && (word[i] != '\0' && word[i] != '\n')) {
-        digit = convert(word[i]);
-        if (digit == -1) {
-            return;
-        } else {
-            if (current->children[digit - 2] == NULL) {
-                current->children[digit - 2] = createNode(NULL);
-            }
-            current = current->children[digit - 2];
-        }
-        i++;
+void add_word(TrieNode *root, char *code, char *word) {
+  TrieNode *curr = root;
+  int i = 0;
+  while (code[i] != '\0') {
+    int number = code[i] - '0';
+    TrieNode *next = curr->children[number];
+    if (next == NULL) {
+      curr->children[number] = make_node(number, "");
     }
-    
-    // Check if the current Trie node already has a word associated with it
-    if (current->word == NULL) {
-        current->word = word;
+    curr = curr->children[number];
+    i++;
+  }
+
+  if (strlen(curr->word) == 0) {
+    free(curr->word);
+    char *word_cpy = (char *) malloc(sizeof(char) * (strlen(word) + 1));
+    check_malloc(word_cpy);
+    strncpy(word_cpy, word, strlen(word) + 1);
+    curr->word = word_cpy;
+  } else {
+    while (curr->children[10] != NULL) {
+      curr = curr->children[10];
+    }
+    curr->children[10] = make_node(10, word);
+  }
+}
+
+TrieNode *get_word_node(TrieNode *root, char *code) {
+  TrieNode *curr = root;
+  int i = 0;
+  while (code[i] != '\0') {
+    int number = code[i] - '0';
+    if (curr->children[number] == NULL) {
+      return NULL;
     } else {
-        // Find the first available child node to store the word
-        while (current->children[8] != NULL) {
-            current = current->children[8];
-        }
-        current->children[8] = createNode(word);
+      curr = curr->children[number];
     }
+    i++;
+  }
+  return curr;
 }
 
-// Function to search for a word in the Trie
-char* search(Trie* root, char* input) {
-    if (root == NULL || input[0] == '#') {
-        return "Invalid input\n";
-    }
-
-    Trie* cur = root;
-    int character;
-
-    // Traverse through each character in the input
-    while (*input != '\0' && *input != '\n') {
-        if (*input == '#') {
-            if (cur->children[8] == NULL) {
-                return "There are no more T9onyms\n";
-            }
-            cur = cur->children[8];
-        } else {
-            character = *input - '0' - 2;
-            if (character < 0 || character > 7) {
-                return "Invalid input\n";
-            } else if (cur->children[character] == NULL) {
-                return "Not found in current dictionary\n";
-            }
-            cur = cur->children[character];
-        }
-        input++;
-    }
-
-    // Check if a word is associated with the current Trie node
-    if (cur->word == NULL) {
-        return "Not found in current dictionary\n";
-    }
-    return cur->word;
-}
-
-// Function to convert a letter to its corresponding T9 digit
-int convert(char letter) {
-    int t9[26] = {2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 7, 7, 8,
-                  8, 8, 9, 9, 9, 9};
-    if (letter == '#') {
-        return 1;
-    } else {
-        return t9[letter - 'a'];
-    }
-}
-
-void freeMem(Trie* root) {
-    for (int i = 0; i < CHILDREN; i++) {
-        if (root->children[i] != NULL) {
-        freeMem(root->children[i]);
-        }
-    }
+void free_memory(TrieNode *root) {
+  if (root != NULL) {
     free(root->word);
+    for (int i = 0; i < 11; i++) {
+      free_memory(root->children[i]);
+    }
     free(root);
+  }
+}
+
+void print_tree(TrieNode *root) {
+  if (root != NULL) {
+    int number = root->number;
+    char *word = root->word;
+    printf("(%d, %s) ", number, word);
+    for (int i = 0; i < 11; i++) {
+      print_tree(root->children[i]);
+    }
+  }
+}
+
+void check_malloc(void *pointer) {
+  if (!pointer) {
+    fprintf(stderr, "Malloc failed, not enough space in heap\n");
+    exit(EXIT_FAILURE);
+  }
 }

@@ -5,15 +5,19 @@
 #ifndef TRIE_H
 #define TRIE_H
 
-typedef struct Trie {
-    char* word;
-    struct Trie *children[10];
-} trie;
+typedef struct TrieNode {
+  int number;
+  char *word;
+  struct TrieNode *children[11];
+} TrieNode;
 
-trie* createNode(char* word);
-void insert(trie* root, char* word);
-char* search(trie* root, char* word);
-int convert(char letter);
-void freeMem(trie* root);
+TrieNode *make_node(int number, char *word);
+
+void add_word(TrieNode *root, char *code, char *word);
+TrieNode *get_word_node(TrieNode *root, char *code);
+void free_memory(TrieNode *root);
+void print_tree(TrieNode *root);
+
+void check_malloc(void *pointer);
 
 #endif 

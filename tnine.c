@@ -10,101 +10,138 @@
 
 #define MAX_LENGTH 100 
 
-// Function to create a Trie data structure by reading words from a file
-Trie* createTrie(char* file);
+#define T9_CHARS "23456789#" 
+#define MAX_WORD 100           
 
-// Function to start the interactive session with the user
-void startIOSession(Trie* root);
+void create_table(int *table);
+void user_interface(TrieNode *root);
+void get_T9_code(char *word, char *code, int *table);
+int check_valid_code(char *code);
 
-int main(int argc, char* argv[]) {
-    // Check if the correct number of command line arguments was provided
-    if (argc != 2) {
-        fprintf(stderr, "Two arguments are required.\n");
-        exit(1);
+int main(int argc, char**argv) {
+  FILE *file = fopen(argv[1], "r");
+  if (!file) {
+    fprintf(stderr, "unable to open dictionary");
+    exit(EXIT_FAILURE);
+  }
+
+  int *table = (int *) malloc(26 * sizeof(int));
+  check_malloc(table);
+  create_table(table);
+  TrieNode *root = make_node(-1, "");
+  char line[MAX_WORD];
+  char code[MAX_WORD];
+  code[0] ='\0';
+  while (fgets(line, MAX_WORD, file)) {
+    line[strlen(line) - 1] = '\0';
+    get_T9_code(line, code, table);
+    if (!check_valid_code(code)) {
+      continue;
     }
+    add_word(root, code, line);
+  }
 
-    // Get the file name from the command line argument
-    char* file = argv[1];
+  user_interface(root);
 
-    // Create the Trie data structure using the provided file
-    Trie* root = createTrie(file);
-
-    // If the Trie was successfully created, start the interactive session
-    if (root != NULL) {
-        startIOSession(root);
-
-        // Free the memory allocated for the Trie
-        freeMem(root);
-    }
-
-    return 0;
+  free(table);
+  free_memory(root);
+  fclose(file);
+  return EXIT_SUCCESS;
 }
 
-// Function to create a Trie data structure by reading words from a file
-Trie* createTrie(char* file) {
-    Trie* root;
-    char line[MAX_LENGTH];
-    char* buffer;
+void user_interface(TrieNode *root) {
 
-    // Open the file for reading
-    FILE* f = fopen(file, "r");
-    if (f == NULL) {
-        fprintf(stderr, "File: %s was not found:\n", file);
-        return NULL;
+  TrieNode *current_word = root;
+  char *input = (char *) malloc(MAX_WORD * sizeof(char));
+  check_malloc(input);
+  printf("Enter \"exit\" to quit.\n");
+  while (1) {
+    printf("Enter Key Sequence (or \"#\" for next word):\n>");
+    fgets(input, MAX_WORD, stdin);
+    input[strlen(input) - 1] = '\0';
+    if (strstr(input, "exit")) {
+      break;
+    } else if (check_valid_code(input) == 0) {
+      printf("Invalid T9 code\n");
+      continue;
+    }
+    int pounds_count = 0;
+    char *pounds = strstr(input, "#");
+    if (pounds) {
+      pounds_count = strlen(pounds);
+    }
+    input[strlen(input) - pounds_count] = '\0';
+
+    if (strlen(input) != 0) {
+      current_word = get_word_node(root, input);
+      if (current_word == NULL || strlen(current_word->word) == 0) {
+        printf("Not found in current dictionary.\n");
+        continue;
+      }
+    }
+
+    while (pounds_count > 0 && current_word != NULL) {
+      current_word = current_word->children[10];
+      pounds_count--;
+    }
+
+    if (current_word != NULL) {
+      printf("%s\n", current_word->word);
     } else {
-        // Create the root node of the Trie
-        root = createNode(NULL);
-
-        // Read each line from the file and insert it into the Trie
-        while (fgets(line, MAX_LENGTH, f)) {
-            // Allocate memory for the buffer and copy the line into it
-            buffer = malloc(sizeof(char) * (strlen(line) + 1));
-            strncpy(buffer, line, sizeof(char) * (strlen(line) + 1));
-
-            // Insert the buffer (word) into the Trie
-            insert(root, buffer);
-        }
+      printf("%s\n", "There are no more T9onyms");
     }
-
-    // Close the file
-    fclose(f);
-
-    return root;
+  }
+  free(input);
 }
 
-// Function to start the interactive session with the user
-void startIOSession(Trie* root) {
-    char stdin[MAX_LENGTH + 1];
-    char prev[MAX_LENGTH + 1];
-
-    // Display initial instructions to the user
-    printf("Enter \"exit\" to quit.\n");
-    printf("Enter Key Sequence (or \"#\" for next word):\n");
-    printf("> ");
-
-    // Read user input
-    scanf("%s", stdin);
-
-    // Continue the interactive session until the user enters "exit"
-    while (strcmp(stdin, "exit") != 0) {
-        if (strncmp(stdin, "#", 1) == 0) {
-            // User entered a number sequence starting with "#"
-            // Append "#" to the previous input and search for the corresponding word
-            int len = sizeof(prev + strlen(prev));
-            snprintf(prev + strlen(prev), len + 1, "#");
-            printf("        %s", search(root, prev));
-        } else {
-            // User entered a number sequence
-            // Search for the corresponding word and update the previous input
-            printf("        %s", search(root, stdin));
-            snprintf(prev, strlen(stdin) + 1, "%s", stdin);
-        }
-
-        // Prompt the user for the next input
-        printf("Enter Key Sequence (or \"#\" for next word):\n");
-        printf("> ");
-
-        // Read user input
-        scanf("%s", stdin);
+void create_table(int *table) {
+  int i = 2;
+  int k = 0;
+  while (i < 8) {
+    for (int j = 0; j < 3; j++) {
+      table[k] = i;
+      k++;
     }
+    i++;
+  }
+  table[k] = i - 1;
+  k++;
+  while (i < 10) {
+    for (int j = 0; j < 3; j++) {
+      table[k] = i;
+      k++;
+    }
+    i++;
+  }
+  table[k] = 9;
+}
+
+void get_T9_code(char *word, char *code, int *table) {
+  int invalid = 0;
+  for (int i = 0; i < strlen(word); i++) {
+    int index = ((int) word[i]) - 97;
+    if (index < 0 || index > 25) {
+      invalid = 1;
+      break;
+    }
+    int code_number = table[index];
+    code[i] = code_number + '0';
+  }
+  if (invalid) {
+    code[0] = '\0';
+  } else {
+    code[strlen(word)] = '\0';
+  }
+}
+
+int check_valid_code(char *code) {
+  if (strlen(code) == 0) {
+    return 0;
+  }
+  for (int i = 0; i < strlen(code); i++) {
+    if (strchr(T9_CHARS, code[i]) == NULL) {
+      return 0;
+    }
+  }
+  return 1;
 }
