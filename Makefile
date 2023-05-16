@@ -3,16 +3,17 @@
 # CSE 374 HW 5
 
 #build the executable file named "t9."
-tnine: tnine.o trie.o
-	gcc -Wall -g -std=c11 -o t9 tnine.o trie.o
+all: t9
 
-
-trie.o: trie.c trienode.h
-	gcc -Wall -g -std=c11 -c trie.c
+t9: tnine.o trie.o
+	gcc -Wall -std=c11 -o t9 tnine.o trie.o
 
 tnine.o: tnine.c trienode.h
-	gcc -Wall -g -std=c11 -c tnine.c
+	gcc -Wall -std=c11 -c tnine.c
+
+trie.o: trie.c trienode.h
+	gcc -Wall -std=c11 -c trie.c
 
 clean:
-	rm -f *.o t9 *~
+	rm -f *.o output *~ 
 

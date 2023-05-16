@@ -2,20 +2,18 @@
  * trieNode.h - interfece to routine to contstruct a trie to realize T9 predictive text
  * CSE 374 HW 5
  */
+#ifndef TRIE_H
+#define TRIE_H
 
-#ifndef TRIENODE_H
-#define TRIENODE_H
+typedef struct Trie {
+    char* word;
+    struct Trie *children[10];
+} trie;
 
-// define the struct trieNode
-typedef struct trieNode {
-  char * word;
-  struct trieNode * branch[11];
-} Node_t;
+trie* createNode(char* word);
+void insert(trie* root, char* word);
+char* search(trie* root, char* word);
+int convert(char letter);
+void freeMem(trie* root);
 
-Node_t * CreateTrieNode();
-int getDigit(char letter);
-void BuildTrie(Node_t * root, char * s);
-Node_t * FindNode(Node_t * root, char * number);
-void malfree(Node_t * root);
-
-#endif
+#endif 
