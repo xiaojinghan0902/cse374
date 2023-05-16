@@ -1,28 +1,21 @@
- /* trienode.h contains structure and function declarations for 
-   a trie implementation 
-   CSE374, HW5, 22Wi 
-*/
+/*
+ * trieNode.h - interfece to routine to contstruct a trie to realize T9 predictive text
+ * CSE 374 HW 5
+ */
+
 #ifndef TRIENODE_H
 #define TRIENODE_H
 
-#include <stdio.h>
-
-#define MAXLEN 50
-#define BRANCHES 9
-
+// define the struct trieNode
 typedef struct trieNode {
-  struct trieNode *branches[BRANCHES]; // Array of child nodes for each digit (0-8)
-  char *word; // Pointer to the word stored at the trie node
-} trieNode;
+  char * word;
+  struct trieNode * branch[11];
+} Node_t;
 
-trieNode* makeNode(); // Function to create a new trie node
-
-void insert(char* word, trieNode* root); // Function to insert a word into the trie
-
-int charToInt(char ch); // Function to convert a character digit to an integer
-
-trieNode* search(trieNode* trie, char* input); // Function to search for a word in the trie based on a given input sequence
-
-void freetree(trieNode *root); // Function to free the memory occupied by the trie
+Node_t * CreateTrieNode();
+int getDigit(char letter);
+void BuildTrie(Node_t * root, char * s);
+Node_t * FindNode(Node_t * root, char * number);
+void malfree(Node_t * root);
 
 #endif

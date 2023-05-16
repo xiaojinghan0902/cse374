@@ -1,58 +1,65 @@
+/*
+ * t9.c - the main program uses the trieNode for T9 predictive text implementation
+ * CSE 374 HW 5
+ */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+
 #include "trienode.h"
 
-
-// run_session run the on-going decoding interaction with the
-// user.  It requires a previously build wordTrie to work.
-void run_session(trieNode *wordTrie);
-
-int main(int argc, char **argv) {
-  FILE *dictionary = NULL;
-
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s [DICTIONARY]\n", argv[0]);
-    return EXIT_FAILURE;
+// read words from dictionary to build the trie and output the search result of
+// the corresponding word after the user type the digit sequence
+int main(int argc, char* argv[]) {
+  FILE * fp;
+  char line[100];
+  Node_t * root = CreateTrieNode();
+  // read file
+  fp = fopen(argv[1], "r");
+  if (fp != NULL) {
+    while (fgets(line, 100, fp) != NULL) {
+      BuildTrie(root, line);
+    }
   } else {
-    dictionary = fopen(argv[1], "r");
-    if (!dictionary) {
-      fprintf(stderr, "Error: Cannot open %s\n", argv[1]);
-      return EXIT_FAILURE;
-    }
+    fprintf(stderr, "%s", "Could not open the file.\n");
+    return 1;
   }
-
-  trieNode* root = makeNode();
-  int bufferLength = 255;
-  char buffer[bufferLength]; 
-  while(fgets(buffer, bufferLength, dictionary)) {
-    insert(buffer,root);
-  }
-  run_session(root);
-  printf("session end\n");
-  free_tree(root);
-  return(EXIT_SUCCESS);
-}
-
-void run_session(trieNode *root) {
-    char input[MAXLEN];  // Buffer to store user input
-    printf("Enter \"exit\" to quit.\n");
-    trieNode* curr;  // Variable to keep track of the current node in the trie
-
-    while (1) {
-        printf("Enter Key Sequence (or \"#\" for next word):\n> ");
-        scanf("%s", input);  // Read user input
-
-        if (strcmp(input, "exit") == 0) {
-            break;  // Break the loop and exit the session if the user enters "exit"
+  fclose(fp);
+  printf("Enter \"exit\" to quit.\n");
+  char number[100];  // store the enter digits
+  int control = 1;  // control the status of interactive session
+  Node_t * current = root;  // used to store the traverse result in order to
+  // handle the next enter begins with "#"
+  while (control) {
+    printf("Enter Key Sequence (or \"#\" for next word): \n");
+    scanf("%s", number);
+    if (strcmp("exit", number) != 0) {
+      if (number[0] != '#') {
+      current = FindNode(root, number);
+      } else {
+      current = FindNode(current, number);
+      }
+      if (current != NULL) {
+        if (current -> word) {
+          printf("\'%s\'\n", current -> word);
         } else {
-            if (strcmp(input, "#") != 0) {
-                curr = search(root, input);  // Search for the node corresponding to the input in the trie
-            } else {
-                curr = search(curr, input);  // Search for the next word starting from the current node
-            }  
+          printf("Not found in current dictionary.\n");
         }
+      } else {
+        if (number[strlen(number) - 1] == '#') {
+          printf("There are no more T9onyms\n");
+        } else {
+          printf("Not found in current dictionary.\n");
+        }
+      }
+    } else {
+      control = 0;
     }
+  }
+  // free all the malloced space from heap
+  malfree(root);
+  free(root);
+  return 0;
 }
-
